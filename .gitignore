@@ -1,0 +1,13 @@
+# Temporary files
+.tmp.driveupload/
+*.tmp
+
+# Claude Code settings
+.claude/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/

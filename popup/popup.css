@@ -1,0 +1,393 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 360px;
+  min-height: 180px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #fafafa;
+  color: #1a1a1a;
+  font-size: 13px;
+}
+
+.container {
+  padding: 16px;
+}
+
+/* ヘッダー */
+header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+header h1 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: -0.01em;
+}
+
+/* セクション */
+.section {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.section-header label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+}
+
+/* 入力グループ */
+.input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #333;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+}
+
+.input-group input::placeholder {
+  color: #aaa;
+}
+
+/* ボタン */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #666;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-icon:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.btn-primary {
+  padding: 8px 14px;
+  background: #1a1a1a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-primary:hover {
+  background: #333;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #e5e5e5;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-secondary:hover {
+  background: #eee;
+}
+
+.btn-large {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: #1a1a1a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn-large:hover:not(:disabled) {
+  background: #333;
+}
+
+.btn-large:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-large .btn-icon {
+  width: 20px;
+  height: 20px;
+  color: inherit;
+  background: none;
+}
+
+/* ステータス */
+.status {
+  font-size: 11px;
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.status.success {
+  background: #f0f9f0;
+  color: #2d7d2d;
+}
+
+.status.error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* お知らせ */
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.notice svg {
+  flex-shrink: 0;
+}
+
+.notice span {
+  font-size: 12px;
+}
+
+/* プログレス */
+.progress {
+  margin-top: 12px;
+}
+
+.progress-bar {
+  height: 4px;
+  background: #e5e5e5;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: #1a1a1a;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 11px;
+  color: #888;
+  text-align: center;
+  margin-top: 6px;
+}
+
+/* 結果 */
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.results-header h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+#results-container {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.result-item {
+  background: #f9f9f9;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.result-item:last-child {
+  margin-bottom: 0;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.result-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+}
+
+.btn-copy {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-copy:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #ccc;
+}
+
+.btn-copy:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-copy.copied {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+.result-text {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.result-text.empty {
+  color: #999;
+  font-style: italic;
+}
+
+/* キャプション */
+.caption-text {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+/* エラー */
+.error {
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-top: 12px;
+  border: 1px solid #fecaca;
+}
+
+/* トースト通知 */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #1a1a1a;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ユーティリティ */
+.hidden {
+  display: none !important;
+}
+
+/* スクロールバー */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
