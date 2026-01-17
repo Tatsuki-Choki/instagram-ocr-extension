@@ -78,6 +78,7 @@ const apiKeyInput = document.getElementById('api-key');
 const saveKeyBtn = document.getElementById('save-key');
 const toggleKeyBtn = document.getElementById('toggle-key');
 const keyStatus = document.getElementById('key-status');
+const readingDirectionSelect = document.getElementById('reading-direction');
 const startOcrBtn = document.getElementById('start-ocr');
 const notInstagramWarning = document.getElementById('not-instagram');
 const progressSection = document.getElementById('progress');
@@ -100,13 +101,25 @@ let currentCaption = '';
 document.addEventListener('DOMContentLoaded', async () => {
   log('SidePanel initialized');
 
-  const { geminiApiKey } = await chrome.storage.sync.get(['geminiApiKey']);
+  const { geminiApiKey, readingDirection } = await chrome.storage.sync.get(['geminiApiKey', 'readingDirection']);
   if (geminiApiKey) {
     apiKeyInput.value = geminiApiKey;
     showStatus('APIキー設定済み', 'success');
   }
 
+  // 読み取り方向の設定を復元
+  if (readingDirection && readingDirectionSelect) {
+    readingDirectionSelect.value = readingDirection;
+  }
+
   checkCurrentTab();
+});
+
+// 読み取り方向の変更を保存
+readingDirectionSelect?.addEventListener('change', async () => {
+  const direction = readingDirectionSelect.value;
+  await chrome.storage.sync.set({ readingDirection: direction });
+  log('Reading direction saved: ' + direction);
 });
 
 // 現在のタブをチェック
@@ -225,35 +238,42 @@ startOcrBtn.addEventListener('click', async () => {
     }
 
     const imageUrls = response.images || [];
+    const imageDataList = response.imageDataList || [];  // Base64データを含むリスト
     currentCaption = response.caption || '';
 
     log('=== DATA RECEIVED ===');
     log('Images: ' + imageUrls.length);
+    log('ImageDataList: ' + imageDataList.length);
     log('Caption: ' + (currentCaption ? currentCaption.substring(0, 30) + '...' : 'NONE'));
 
-    imageUrls.forEach((url, i) => {
-      log(`Img ${i + 1}: ...${url.substring(url.length - 30)}`);
+    imageDataList.forEach((data, i) => {
+      log(`Img ${i + 1}: ...${data.url.substring(data.url.length - 30)} (base64: ${data.base64 ? 'YES' : 'NO'})`);
     });
 
-    if (imageUrls.length === 0) {
+    if (imageDataList.length === 0) {
       throw new Error('投稿に画像が見つかりませんでした');
     }
 
     progressSection.classList.remove('hidden');
-    progressCount.textContent = `0/${imageUrls.length}`;
+    progressCount.textContent = `0/${imageDataList.length}`;
     progressFill.style.width = '0%';
 
     const { geminiApiKey } = await chrome.storage.sync.get(['geminiApiKey']);
 
     log('=== OCR LOOP START ===');
-    for (let i = 0; i < imageUrls.length; i++) {
-      log(`OCR ${i + 1}/${imageUrls.length}...`);
-      updateButtonState('processing', `処理中... (${i + 1}/${imageUrls.length})`);
+    for (let i = 0; i < imageDataList.length; i++) {
+      log(`OCR ${i + 1}/${imageDataList.length}...`);
+      updateButtonState('processing', `処理中... (${i + 1}/${imageDataList.length})`);
+
+      const imageData = imageDataList[i];
 
       const result = await chrome.runtime.sendMessage({
         action: 'processOCR',
-        imageUrl: imageUrls[i],
-        apiKey: geminiApiKey
+        imageUrl: imageData.url,
+        base64Image: imageData.base64,  // 既に取得済みのBase64を渡す
+        apiKey: geminiApiKey,
+        readingDirection: readingDirectionSelect?.value || 'auto',
+        tabId: tab.id
       });
 
       log(`Result ${i + 1}: ${result.success ? 'OK' : 'FAIL'}, len=${result.text?.length || 0}`);
@@ -264,9 +284,9 @@ startOcrBtn.addEventListener('click', async () => {
         error: !result.success
       });
 
-      const progress = ((i + 1) / imageUrls.length) * 100;
+      const progress = ((i + 1) / imageDataList.length) * 100;
       progressFill.style.width = `${progress}%`;
-      progressCount.textContent = `${i + 1}/${imageUrls.length}`;
+      progressCount.textContent = `${i + 1}/${imageDataList.length}`;
     }
 
     log('=== OCR COMPLETE ===');

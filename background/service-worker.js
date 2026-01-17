@@ -25,17 +25,82 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   // OCR処理
   if (request.action === 'processOCR') {
-    processImageOCR(request.imageUrl, request.apiKey)
+    processImageOCR(request.imageUrl, request.apiKey, request.readingDirection, request.tabId, request.base64Image)
       .then(result => sendResponse(result))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true;
   }
 });
 
+// 読み取り方向に応じたプロンプトを生成
+function buildPrompt(direction) {
+  let directionInstruction = '';
+
+  if (direction === 'vertical') {
+    directionInstruction = '縦書きのテキストとして、上から下、右から左の順序で読み取ってください。';
+  } else if (direction === 'horizontal') {
+    directionInstruction = '横書きのテキストとして、左から右、上から下の順序で読み取ってください。';
+  } else {
+    directionInstruction = 'テキストの方向（縦書き・横書き）を自動で判断して読み取ってください。';
+  }
+
+  return `この画像に含まれるテキストを全て抽出してください。
+${directionInstruction}
+テキストのみを出力し、余計な説明は不要です。
+テキストが見つからない場合は「テキストなし」と回答してください。
+レイアウトや改行はできるだけ元の構成を保持してください。`;
+}
+
+// ログをsidepanelに送信するヘルパー
+function logToSidepanel(message) {
+  const logEntry = { source: 'content', message: '[SW] ' + message, time: Date.now() };
+  logMessages.push(logEntry);
+  if (logMessages.length > 100) logMessages.shift();
+  console.log('[ServiceWorker]', message);
+}
+
 // 画像をOCR処理
-async function processImageOCR(imageUrl, apiKey) {
+async function processImageOCR(imageUrl, apiKey, readingDirection = 'auto', tabId = null, preloadedBase64 = null) {
   try {
-    const base64Image = await fetchImageAsBase64(imageUrl);
+    logToSidepanel('OCR start: ' + imageUrl.substring(imageUrl.length - 30));
+    logToSidepanel('API Key exists: ' + (apiKey ? 'YES' : 'NO'));
+    logToSidepanel('Preloaded base64: ' + (preloadedBase64 ? 'YES (' + preloadedBase64.length + ')' : 'NO'));
+
+    let base64Image;
+
+    // 既に取得済みのBase64があればそれを使用
+    if (preloadedBase64) {
+      base64Image = preloadedBase64;
+      logToSidepanel('Using preloaded base64');
+    } else if (tabId) {
+      // tabIdが指定されている場合は、Content Script経由で画像を取得
+      logToSidepanel('Fetching via Content Script (tabId=' + tabId + ')');
+      try {
+        const response = await chrome.tabs.sendMessage(tabId, {
+          action: 'fetchImageBase64',
+          imageUrl: imageUrl
+        });
+
+        if (response && response.success && response.base64) {
+          base64Image = response.base64;
+          logToSidepanel('Content Script fetch success, length=' + base64Image.length);
+        } else {
+          throw new Error(response?.error || 'Content Scriptからの画像取得に失敗');
+        }
+      } catch (contentError) {
+        logToSidepanel('Content Script fetch failed: ' + contentError.message);
+        // フォールバック: Service Workerで直接取得を試みる
+        logToSidepanel('Trying direct fetch as fallback...');
+        base64Image = await fetchImageAsBase64(imageUrl);
+      }
+    } else {
+      // 従来の方法: Service Workerで直接取得
+      base64Image = await fetchImageAsBase64(imageUrl);
+    }
+
+    logToSidepanel('Base64 image length: ' + base64Image.length);
+
+    const prompt = buildPrompt(readingDirection);
 
     const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
       method: 'POST',
@@ -43,12 +108,7 @@ async function processImageOCR(imageUrl, apiKey) {
       body: JSON.stringify({
         contents: [{
           parts: [
-            {
-              text: `この画像に含まれるテキストを全て抽出してください。
-テキストのみを出力し、余計な説明は不要です。
-テキストが見つからない場合は「テキストなし」と回答してください。
-レイアウトや改行はできるだけ元の構成を保持してください。`
-            },
+            { text: prompt },
             {
               inlineData: {
                 mimeType: 'image/jpeg',
@@ -66,18 +126,24 @@ async function processImageOCR(imageUrl, apiKey) {
       })
     });
 
+    logToSidepanel('API response status: ' + response.status);
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+      const errorMsg = errorData.error?.message || `API Error: ${response.status}`;
+      logToSidepanel('API Error: ' + errorMsg);
+      throw new Error(errorMsg);
     }
 
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    logToSidepanel('OCR result length: ' + text.length);
 
     return { success: true, text: text.trim() };
 
   } catch (error) {
     console.error('OCR Error:', error);
+    logToSidepanel('OCR Error: ' + error.message);
     return { success: false, error: error.message };
   }
 }
