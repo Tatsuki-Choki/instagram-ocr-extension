@@ -49,7 +49,8 @@ Instagram投稿の画像からテキストを抽出するChrome拡張機能で�
 
 ## 技術仕様
 
-- **OCRエンジン**: Google Gemini API (gemini-2.5-flash)
+- **OCRエンジン**: Google Gemini API (gemini-3.8-flash)
+  - 使用モデルは `background/service-worker.js` 冒頭の定数 `GEMINI_MODEL` の1か所で設定しています
 - **画像取得方式**: URLパラメータ方式（`img_index`）による高速・確実な取得
 - **UI**: Chrome Side Panel API を使用
 - **Manifest**: V3対応
@@ -61,7 +62,7 @@ instagram-ocr-extension/
 ├── manifest.json          # 拡張機能の設定ファイル
 ├── README.md              # このファイル
 ├── background/
-│   └── background.js      # Service Worker（API通信）
+│   └── service-worker.js  # Service Worker（API通信）
 ├── content/
 │   └── content.js         # コンテンツスクリプト（画像・キャプション取得）
 ├── sidepanel/
@@ -108,6 +109,11 @@ instagram-ocr-extension/
 MIT License
 
 ## 更新履歴
+
+### v1.3.1
+- OCRモデルを gemini-3.8-flash に変更（モデル指定を定数 `GEMINI_MODEL` に一元化）
+- 思考レベルを `LOW` に設定し、出力トークン上限を8192に拡大
+- APIキーをURLパラメータではなく `x-goog-api-key` ヘッダーで送信するように変更
 
 ### v1.3.0
 - 読み取り方向設定機能を追加（縦書き・横書き・自動判断を選択可能）
