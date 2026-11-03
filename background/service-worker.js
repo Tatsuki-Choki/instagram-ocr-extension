@@ -1,6 +1,8 @@
 // Gemini API連携用Service Worker
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+// 使用するGeminiモデル（モデル変更時はここだけを書き換える）
+const GEMINI_MODEL = 'gemini-3.8-flash';
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // ログメッセージを保存（sidepanelに転送用）
 let logMessages = [];
@@ -102,9 +104,12 @@ async function processImageOCR(imageUrl, apiKey, readingDirection = 'auto', tabI
 
     const prompt = buildPrompt(readingDirection);
 
-    const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    const response = await fetch(GEMINI_API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
+      },
       body: JSON.stringify({
         contents: [{
           parts: [
@@ -118,10 +123,9 @@ async function processImageOCR(imageUrl, apiKey, readingDirection = 'auto', tabI
           ]
         }],
         generationConfig: {
-          temperature: 0.1,
-          topK: 1,
-          topP: 1,
-          maxOutputTokens: 4096
+          thinkingConfig: { thinkingLevel: 'LOW' },
+          // 思考トークンも出力上限を消費するため余裕を持たせる
+          maxOutputTokens: 8192
         }
       })
     });
